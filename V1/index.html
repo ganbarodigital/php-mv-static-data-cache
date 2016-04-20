@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!--[if lt IE 9]>
+            <script src="assets/html5shiv.js"></script>
+            <script src="assets/html5printshiv.js"></script>
+        <![endif]-->
+        <meta charset="utf-8"/>
+        <title>Static Data Cache Library for PHP from Ganbaro Digital</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="http://ganbarodigital.github.io/php-mv-static-data-cache/assets/docs.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="http://ganbarodigital.github.io/php-mv-static-data-cache/assets/prism.css">
+        <script src="http://ganbarodigital.github.io/php-mv-static-data-cache/assets/prism.js"></script>
+    </head>
+    <body data-ishi-anchors="1">
+        <header role="banner">
+            <div>
+                <p style="font-size: 34px; padding-top: 10px">Static Data Cache Library for PHP</p>
+                <p style="font-size: 18px; border-bottom: 1px solid; padding-bottom: 10px">An incredibly simple key/value data cache to speed up expensive operations</p>
+            </div>
+            <!--<a href="http://ganbarodigital.github.io/php-mv-static-data-cache/index.html">
+                <img src="http://ganbarodigital.github.io/php-mv-static-data-cache/assets/ganbarodigital.svg" width="60" height="60" style="vertical-align: middle; float: left; margin-right: 15px">
+            </a>-->
+            <nav class="navbar topbar">
+                <ul>
+                                            <li class="">
+                            <a class="" href="http://ganbarodigital.github.io/php-mv-static-data-cache/index.html">Overview</a>
+                        </li>
+                                            <li class="current">
+                            <a class="current" href="http://ganbarodigital.github.io/php-mv-static-data-cache/V1/index.html">Version 1.x</a>
+                        </li>
+                                    </ul>
+            </nav>
+        </header>
+                                                                            <header role="subnav">
+                        <nav class="navbar">
+                            <ul>
+                                                                    <li class="current">
+                                        <a class="current" href="http://ganbarodigital.github.io/php-mv-static-data-cache/V1/index.html">StaticDataCache</a>
+                                    </li>
+                                                            </ul>
+                        </nav>
+                    </header>
+                                            <main role="main">
+            
+            <article>
+                <h1 id="version-1x">Version 1.x</h1>
+<div class="callout info">
+<p>Since v1.2016042001</p>
+</div>
+<h2 id="description">Description</h2>
+<p><code>StaticDataCache</code> is a trait. It provides a simple key/value store that is shared amongst all instances of the same class.</p>
+<h2 id="public-interface">Public Interface</h2>
+<p><code>StaticDataCache</code> provides a <code>protected</code> interface for your class to use.</p>
+<pre><code class="language-php">use GanbaroDigital\StaticDataCache\V1\StaticDataCache;
+
+trait StaticDataCache
+{
+    /**
+     * do we have this result set in the cache?
+     *
+     * @param  string|int|double $key
+     *         the index to search for
+     * @return mixed|null
+     */
+    protected static function getFromCache($key);
+
+    /**
+     * store data about a key to speed up repeated calls
+     *
+     * @param string|int|double $key
+     *        the data key to store information about
+     * @param mixed $data
+     *        the data to store in the cache
+     */
+    protected static function setInCache($key, $data);
+
+    /**
+     * empty out the cache completely
+     *
+     * this is mostly provided for unit testing purposes
+     *
+     * @return void
+     */
+    protected static function resetCache();
+
+    /**
+     * return a copy of the cache for inspection
+     *
+     * this is mostly provided for unit testing purposes
+     *
+     * @return array
+     */
+    protected static function getCache();
+}</code></pre>
+<h2 id="how-to-use">How To Use</h2>
+<h3 id="adding-to-your-own-classes">Adding To Your Own Classes</h3>
+<p>It's very easy to add the <code>StaticDataCache</code> to your own classes. Just import the trait, and add it to your class with a <code>use</code> statement.</p>
+<pre><code class="language-php">use GanbaroDigital\StaticDataCache\V1\StaticDataCache;
+
+class MyClass
+{
+    use StaticDataCache;
+}</code></pre>
+<h3 id="caching-expensive-operations">Caching Expensive Operations</h3>
+<p>The <code>StaticDataCache</code> is normally used like this:</p>
+<ul>
+<li>do we already have a result cached? if so, return that</li>
+<li>calculate the result of the operation</li>
+<li>cache the calculated result, and then return that</li>
+</ul>
+<pre><code class="language-php">class MyClass
+{
+    public function expensiveOperation($data)
+    {
+        // do we have this in the cache?
+        //
+        // you need to calculate a key to use
+        $retval = static::getFromCache($key);
+        if ($retval !== null) {
+            return $retval;
+        }
+
+        // perform your expensive operation here
+
+        // cache the results
+        static::setInCache($key, $value);
+
+        // all done
+        return $value;
+    }
+}</code></pre>
+<h3 id="deciding-what-to-cache">Deciding What To Cache</h3>
+<p><em>Caches</em> are an optimisation. They only make sense if the following are true:</p>
+<ul>
+<li><em>Called multiple times</em>: if an operation is rarely called more than once, you probably don't need a cache.</li>
+<li><em>Expensive operation</em>: using the cache means at least one PHP function call (which is very expensive prior to PHP 7.0). Your operation has to be slower than the cost of caching the data.</li>
+<li><em>Repeatable operation</em>: for the same input data, the operation has to produce the same return value. If the return value needs to vary in any way at all, the data isn't suitable for caching.</li>
+<li><em>NULL isn't a valid result</em>: <code>StaticDataCache::getFromCache()</code> returns <code>NULL</code> if the data you're looking for isn't in the cache. That means that you can't store <code>NULL</code> values in the cache.</li>
+</ul>
+<h2 id="throws">Throws</h2>
+<p>This trait does not throw any exceptions.</p>
+<h2 id="notes">Notes</h2>
+<ol>
+<li>The cache itself is private. You can get a read-only copy of the cache by calling <code>StaticDataCache::getCache()</code>.</li>
+</ol>
+<h2 id="see-also">See Also</h2>
+<p>Nothing at this time.</p>
+            </article>
+
+                    </main>
+
+        <aside class="sidebar">
+            <h2>This Page</h2>
+            <nav class="toc" data-type="ishi-toc" data-max-depth="3">
+            </nav>
+        </aside>
+        <footer>
+            <div class="strapline">
+                <p>Copyright &copy; 2015 <a href="http://ganbarodigital.com">Ganbaro Digital Ltd</a>. Released under the <a href="http://ganbarodigital.github.io/php-mv-static-data-cache/license.html">New BSD</a> license.
+                                            Find Static Data Cache Library for PHP on <a href="https://github.com/ganbarodigital/php-mv-static-data-cache">GitHub</a>.
+                                        Built with <a href="http://couscous.io/">Couscous</a>.
+                </p>
+            </div>
+        </footer>
+    <script src="http://ganbarodigital.github.io/php-mv-static-data-cache/assets/laroux.js"></script>
+    <script src="http://ganbarodigital.github.io/php-mv-static-data-cache/assets/ishi.js"></script>
+    </body>
+</html>
